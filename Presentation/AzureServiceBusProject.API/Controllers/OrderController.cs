@@ -1,4 +1,7 @@
-﻿using AzureServiceBusProject.Application.Features.Commands.CreateOrder;
+﻿using AzureServiceBusProject.Application.Events;
+using AzureServiceBusProject.Application.Features.Commands.CreateOrder;
+using AzureServiceBusProject.Application.Features.Commands.DeleteOrder;
+using AzureServiceBusProject.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,18 +16,27 @@ namespace AzureServiceBusProject.API.Controllers
     [ApiController]
     public class OrderController : ControllerBase
     {
-        readonly IMediator mediator;
+        private readonly IMediator mediator;
 
         public OrderController(IMediator mediator)
         {
             this.mediator = mediator;
         }
- 
-        [HttpPost]
-        public async Task<CreateOrderResponse>  CreateOrder ([FromBody]CreateOrderRequest createOrderRequest)
+
+        [HttpPost("CreateOrder")] 
+        public async Task<CreateOrderResponse> CreateOrder([FromBody] CreateOrderRequest createOrderRequest)
         {
-          var response=  await this.mediator.Send(createOrderRequest);
-            return   response;
+            var response = await this.mediator.Send(createOrderRequest);
+
+            return response;
+        }
+
+        [HttpPost("DeleteOrder")]
+        public async Task<DeleteOrderResponse> DeleteOrder([FromBody] DeleteOrderRequest deleteOrderRequeset)
+        {
+
+            var result = await this.mediator.Send(deleteOrderRequeset);
+            return result;
         }
     }
 }

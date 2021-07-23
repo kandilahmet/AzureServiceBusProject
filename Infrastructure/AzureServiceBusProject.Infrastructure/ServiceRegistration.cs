@@ -1,20 +1,43 @@
 ﻿using AzureServiceBusProject.Application.Interfaces;
 using AzureServiceBusProject.Infrastructure.Services;
+using Microsoft.Azure.ServiceBus.Management;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection; 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.IO;
 using System.Text; 
 
 namespace AzureServiceBusProject.Infrastructure
 {
     public static class ServiceRegistration
     {
-       public static void AddInfrastructureServices(this IServiceCollection serviceCollection,IConfiguration configuration)
+       public static void AddInfrastructureServices(this IServiceCollection services)
         {
-            serviceCollection.AddSingleton<IServiceBus, AzureServiceBus>();
-           // serviceCollection.Configure<ServicesModel>(configuration.GetSection("Services")); 
-            //configuration.GetSection("Services")
+            services.AddSingleton<IServiceBus, AzureServiceBus>();
+
+            //Farklı bir Proje/Class Library den appsettings.json dosyasındaki verileri okuma eylemi
+
+            // .json(farklı uzanltılı .xml dosyada olabilir) dosyasını ele alması için bir ConfigurationBuilder örneği oluşturuyoruz. 
+            var configurationBuilder = new ConfigurationBuilder()
+                    .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../AzureServiceBusProject.API"))
+                    .AddJsonFile("appsettings.json");
+            //Build çağrısı sonucu IConfigurationRoot arayüzü üzerinden taşınabilecek bir nesne örneği elde ediyoruz.
+            IConfigurationRoot configurationRoot = configurationBuilder.Build();
+            //GetSection ile alınan veriler IoC yapılanmasına ekleniyor/enjekte ediliyor. 
+            //(AzureServiceBus.cs de enjecte edilen ServiceMode'in kullanmı var.)
+            var serviceModel = configurationRoot.GetSection("Services").Get<ServicesModel>();
+            //Yöntem 1
+             services.AddSingleton(serviceModel);
+            //Yöntem 2
+            //Bu yöntemde oluyor fakat sanırım zaten .Get<ServicesModel>() ile yeni bir instance üretiliyor.
+            //services.AddSingleton<ServicesModel>(x => new ServicesModel
+            //{
+            //    AzureConnectionString = serviceModel.AzureConnectionString
+            //});
+
+            services.AddSingleton<ManagementClient>(x => new ManagementClient(serviceModel.AzureConnectionString));
         }
     }
 }

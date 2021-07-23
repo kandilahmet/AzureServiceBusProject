@@ -1,4 +1,5 @@
 using AzureServiceBusProject.Application;
+using AzureServiceBusProject.Infrastructure;
 using AzureServiceBusProject.Application.Features.Commands.CreateOrder;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -30,6 +31,7 @@ namespace AzureServiceBusApp.API
         {
             services.AddTransient<CreateOrderHandler>();
             services.AddApplicationServices();
+            services.AddInfrastructureServices();
             services.AddControllers(); 
             services.AddSwaggerGen(c =>
             {
