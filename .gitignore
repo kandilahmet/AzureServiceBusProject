@@ -332,3 +332,8 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
+Presentation/AzureServiceBusProject.ConsumerAPI/appsettings.json
+Presentation/AzureServiceBusProject.API/appsettings.json
+Presentation/AzureServiceBusProject.API/appsettings.json
+Presentation/AzureServiceBusProject.API/appsettings.json
+Infrastructure/AzureServiceBusProject.Infrastructure/Services/AzureServiceBus.cs
