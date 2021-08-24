@@ -33,9 +33,10 @@ namespace AzureServiceBusProject.Application.Features.Commands.CreateOrder
                 ProductName = result.ProductName
             };
 
-            await this.serviceBus.CreateQueueIfNotExits("OrderCreatedQueue");
-            await this.serviceBus.SendMessageToQueueAsync("OrderCreatedQueue", eventOrderCreatedModel);
-
+            //await this.serviceBus.CreateQueueIfNotExits("OrderCreatedQueue");
+            //await this.serviceBus.SendMessageToQueueAsync("OrderCreatedQueue", eventOrderCreatedModel);
+            serviceBus.SendMessageToCreateQueueAsync(eventOrderCreatedModel);
+            
             return result;
         }
 

@@ -37,7 +37,7 @@ namespace AzureServiceBusProject.Infrastructure
             //    AzureConnectionString = serviceModel.AzureConnectionString
             //});
 
-            services.AddSingleton<ManagementClient>(x => new ManagementClient(serviceModel.AzureConnectionString));
+            services.AddSingleton<ManagementClient>(x => new ManagementClient(serviceModel.AzureServices.AzureConnectionString));
         }
     }
 }

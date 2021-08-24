@@ -30,8 +30,9 @@ namespace AzureServiceBusProject.Application.Features.Commands.DeleteOrder
                 Id=result.Id
             };
 
-            await this.serviceBus.CreateQueueIfNotExits("OrderDeletedQueue");
-            await this.serviceBus.SendMessageToQueueAsync("OrderDeletedQueue", eventOrderDeletedModel);
+            //await this.serviceBus.CreateQueueIfNotExits("OrderDeletedQueue");
+            //await this.serviceBus.SendMessageToQueueAsync("OrderDeletedQueue", eventOrderDeletedModel);
+            this.serviceBus.SendMessageToDeleteQueueAsync(eventOrderDeletedModel);
 
             return result;
         }

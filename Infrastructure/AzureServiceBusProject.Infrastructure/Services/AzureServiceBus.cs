@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Microsoft.Azure.ServiceBus.Management;
 using AzureServiceBusProject.Application.Events;
+using System.Threading;
 
 namespace AzureServiceBusProject.Infrastructure.Services
 {   /// Azure Queue/Topic kullanma(kayıt atma-kayıt okuma-dinleme) işleri ayrı bir dll(Microsoft.Azure.ServiceBus)
@@ -34,10 +35,12 @@ namespace AzureServiceBusProject.Infrastructure.Services
             this.servicesModel = serviceModel;
             this.manageClient = manageClient;
         }
+
+
         public async Task SendMessageToQueueAsync(string queueName, object messageContent)
         {
 
-            IQueueClient queueClient = new QueueClient(this.servicesModel.AzureConnectionString, queueName);
+            IQueueClient queueClient = new QueueClient(this.servicesModel.AzureServices.AzureConnectionString, queueName);
 
             var byteArray = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(messageContent));
 
@@ -45,43 +48,68 @@ namespace AzureServiceBusProject.Infrastructure.Services
 
             await queueClient.SendAsync(message);
         }
-
-        public async Task CreateQueueIfNotExits(string QueueName)
+        public async void SendMessageToCreateQueueAsync(object messageContent)
         {
-            var ifExists = await this.manageClient.QueueExistsAsync(QueueName);
+            var ifExists = await this.manageClient.QueueExistsAsync(this.servicesModel.AzureServices.OrderCreatedQueue);
 
             if (!ifExists)
             {
-                await this.manageClient.CreateQueueAsync(QueueName);
+                await this.manageClient.CreateQueueAsync(this.servicesModel.AzureServices.OrderCreatedQueue);
             }
-        }
 
-        public async Task DeleteQueueIfNotExits(string QueueName)
+            await SendMessageToQueueAsync(this.servicesModel.AzureServices.OrderCreatedQueue, messageContent);
+        }
+        public async void SendMessageToDeleteQueueAsync(object messageContent)
         {
-            var ifExists = await this.manageClient.QueueExistsAsync(QueueName);
+            var ifExists = await this.manageClient.QueueExistsAsync(this.servicesModel.AzureServices.OrderDeletedQueue);
 
             if (!ifExists)
             {
-                await this.manageClient.CreateQueueAsync(QueueName);
+                await this.manageClient.CreateQueueAsync(this.servicesModel.AzureServices.OrderDeletedQueue);
             }
+            await SendMessageToQueueAsync(this.servicesModel.AzureServices.OrderDeletedQueue, messageContent);
         }
+         
 
-        public async Task GetMessageFromQueue<T>(string queueName, Action<T> receiveAction)
+        public void GetMessageFromQueue<T>(string queueName)
         {
-            IQueueClient queueClient = new QueueClient(servicesModel.AzureConnectionString, queueName);
-            queueClient.RegisterMessageHandler(async (message, cancellationToken) =>
+            IQueueClient queueClient = new QueueClient(servicesModel.AzureServices.AzureConnectionString, queueName);
+            //  queueClient.RegisterMessageHandler(OnProcess<T>, ExceptionReceivedHandler);
+            queueClient.RegisterMessageHandler(OnProcess<T>, GetMessageHandlerOptions());
+        }
+        public void GetMessageFromDeleteQueue()
+        {
+            GetMessageFromQueue<OrderDeletedEvent>(servicesModel.AzureServices.OrderDeletedQueue);
+        }
+        public void GetMessageFromCreateQueue()
+        {
+            GetMessageFromQueue<OrderCreatedEvent>(servicesModel.AzureServices.OrderCreatedQueue);
+        }
+        static private MessageHandlerOptions GetMessageHandlerOptions()
+        {
+            var messageHandlerOptions = new MessageHandlerOptions(ExceptionReceivedHandler)
             {
-                var model = JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(message.Body));
-                receiveAction(model);
-                await Task.CompletedTask;
-            },
-            new MessageHandlerOptions(i => Task.CompletedTask)
-            );  
-        }
+                AutoComplete = false,
+                MaxConcurrentCalls = 1,
+            };
 
-        public async Task GetMessageFromDeleteQueue(string queueName)
+            return messageHandlerOptions;
+        }
+        static Task ExceptionReceivedHandler(ExceptionReceivedEventArgs exceptionReceivedEventArgs)
         {
-            GetMessageFromQueue<OrderDeletedEvent>(queueName, i => Console.WriteLine(i.Id));
+            Console.WriteLine($"Message handler encountered an exception {exceptionReceivedEventArgs.Exception}.");
+            var context = exceptionReceivedEventArgs.ExceptionReceivedContext;
+            Console.WriteLine("Exception context for troubleshooting:");
+            Console.WriteLine($"- Endpoint: {context.Endpoint}");
+            Console.WriteLine($"- Entity Path: {context.EntityPath}");
+            Console.WriteLine($"- Executing Action: {context.Action}");
+
+            return Task.CompletedTask;
+        }
+        private static Task OnProcess<T>(Message message, CancellationToken cancellationToken)
+        {
+            var model = JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(message.Body));
+            return Task.CompletedTask;
         }
     }
 }

@@ -6,6 +6,14 @@ namespace AzureServiceBusProject.Infrastructure.Services
 {
     public class ServicesModel
     {
-        public string AzureConnectionString { get; set; }
+        public AzureServices AzureServices { get; set; }
+          
     }
+     public class AzureServices
+    {
+        public string AzureConnectionString { get; set; }
+        public string OrderDeletedQueue { get; set; } 
+        public string OrderCreatedQueue { get; set; } 
+    }
+    
 }

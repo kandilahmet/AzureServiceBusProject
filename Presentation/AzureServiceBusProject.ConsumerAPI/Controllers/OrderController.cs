@@ -19,15 +19,15 @@ namespace AzureServiceBusProject.ConsumerAPI.Controllers
         }
 
         [HttpPost("GetOrderDeletedFromQueue")]
-        public async Task GetOrderDeletedFromQueue()
+        public  void  GetOrderDeletedFromQueue()
         {
-          await  ServiceBus.GetMessageFromDeleteQueue("OrderDeletedQueue");
+             ServiceBus.GetMessageFromDeleteQueue();
         }
 
         [HttpPost("GetOrderCreatedFromQueue")]
-        public async Task GetOrderCreatedFromQueue()
+        public  void GetOrderCreatedFromQueue()
         {
-            await ServiceBus.GetMessageFromDeleteQueue("OrderCreatedQueue");
+              ServiceBus.GetMessageFromCreateQueue();            
         }
 
     }

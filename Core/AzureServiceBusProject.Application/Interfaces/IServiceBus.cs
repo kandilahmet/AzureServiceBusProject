@@ -7,8 +7,11 @@ namespace AzureServiceBusProject.Application.Interfaces
 {
     public interface IServiceBus
     {
-        public Task CreateQueueIfNotExits(string QueueName); 
-        public Task SendMessageToQueueAsync(string queueName,object messageContent);
-        public Task GetMessageFromDeleteQueue(string queueName);
+         
+        //public Task SendMessageToQueueAsync(string queueName,object messageContent);
+        public void SendMessageToCreateQueueAsync(object messageContent);
+        public void SendMessageToDeleteQueueAsync(object messageContent);
+        public void GetMessageFromDeleteQueue();
+        public void GetMessageFromCreateQueue();
     }
 }
