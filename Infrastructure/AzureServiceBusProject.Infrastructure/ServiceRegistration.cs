@@ -15,7 +15,8 @@ namespace AzureServiceBusProject.Infrastructure
     {
        public static void AddInfrastructureServices(this IServiceCollection services)
         {
-            services.AddSingleton<IServiceBus, AzureServiceBus>();
+            //services.AddSingleton<IServiceBus, AzureServiceBusOldVersion>();//Eski versiyon mesaj gönderim yapısı
+            services.AddSingleton<IServiceBus, AzureServiceBusNewVersion>();
 
             //Farklı bir Proje/Class Library den appsettings.json dosyasındaki verileri okuma eylemi
 

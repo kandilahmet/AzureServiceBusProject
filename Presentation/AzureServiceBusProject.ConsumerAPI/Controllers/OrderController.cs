@@ -12,22 +12,22 @@ namespace AzureServiceBusProject.ConsumerAPI.Controllers
     [ApiController]
     public class OrderController : ControllerBase
     {
-        private readonly IServiceBus ServiceBus;
+        private readonly IServiceBus serviceBus;
         public OrderController(IServiceBus serviceBus)
         {
-            ServiceBus = serviceBus;
+            this.serviceBus = serviceBus;
         }
 
         [HttpPost("GetOrderDeletedFromQueue")]
         public  void  GetOrderDeletedFromQueue()
         {
-             ServiceBus.GetMessageFromDeleteQueue();
+             serviceBus.GetMessageFromDeleteQueue();
         }
 
         [HttpPost("GetOrderCreatedFromQueue")]
         public  void GetOrderCreatedFromQueue()
         {
-              ServiceBus.GetMessageFromCreateQueue();            
+              serviceBus.GetMessageFromCreateQueue();            
         }
 
     }
