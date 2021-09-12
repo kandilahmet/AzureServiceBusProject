@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AzureServiceBusProject.Application.Interfaces;
 using Microsoft.Azure.ServiceBus;
+using Microsoft.Azure.ServiceBus.Core;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -15,7 +16,7 @@ namespace AzureServiceBusProject.Infrastructure.Services
 {   /// Azure Queue/Topic kullanma(kayıt atma-kayıt okuma-dinleme) işleri ayrı bir dll(Microsoft.Azure.ServiceBus)
     /// Management işleri Bu Queue/Topic oluşturulması temizlenmesi var olup olmadığı bilgilerinin kontrol edilmesi
     /// ayr bir dll de toplanmıştır(Microsoft.Azure.Management.ServiceBus).
-    public class AzureServiceBusOldVersion : IServiceBus
+    public class AzureServiceBusOldVersion :IServiceBus
 
     {
         private readonly ServicesModel servicesModel;
@@ -52,9 +53,8 @@ namespace AzureServiceBusProject.Infrastructure.Services
             var message = new Message(byteArray);
 
             await queueClient.SendAsync(message);
-        }
-       
-        public async void SendMessageToCreateQueueAsync(object messageContent)
+        }         
+        public async Task SendMessageToCreateQueueAsync(object messageContent)
         {
             //Belirtilen Queue var mı ? kontrol edilir.
             var ifExists = await this.manageClient.QueueExistsAsync(this.servicesModel.AzureServices.OrderCreatedQueue);
@@ -66,7 +66,7 @@ namespace AzureServiceBusProject.Infrastructure.Services
             //Mesaj queue'ya gönderilir.
             await SendMessageToQueueAsync(this.servicesModel.AzureServices.OrderCreatedQueue, messageContent);
         }
-        public async void SendMessageToDeleteQueueAsync(object messageContent)
+        public async Task SendMessageToDeleteQueueAsync(object messageContent)
         {
             //Belirtilen Queue var mı ? kontrol edilir.
             var ifExists = await this.manageClient.QueueExistsAsync(this.servicesModel.AzureServices.OrderDeletedQueue);
@@ -80,30 +80,52 @@ namespace AzureServiceBusProject.Infrastructure.Services
         }
          
 
-        public void GetMessageFromQueue<T>(string queueName)
+        public async Task<Message> GetMessageFromQueueAsync(string queueName)
         {
-            IQueueClient queueClient = new QueueClient(servicesModel.AzureServices.AzureConnectionString, queueName);
+            //IQueueClient queueClient = new QueueClient(servicesModel.AzureServices.AzureConnectionString, queueName);
             //  queueClient.RegisterMessageHandler(OnProcess<T>, ExceptionReceivedHandler);
-            queueClient.RegisterMessageHandler(OnProcess<T>, GetMessageHandlerOptions());
+            //queueClient.RegisterMessageHandler(OnProcess<T>, GetMessageHandlerOptions());
+           var receiver=  new MessageReceiver(servicesModel.AzureServices.AzureConnectionString, queueName);
+           return  await receiver.ReceiveAsync();
         }
-        public void GetMessageFromDeleteQueue()
+        public async Task<T> GetMessageFromDeleteQueueAsync<T>()
         {
-            GetMessageFromQueue<OrderDeletedEvent>(servicesModel.AzureServices.OrderDeletedQueue);
+
+           var result =  GetMessageFromQueueAsync(servicesModel.AzureServices.OrderDeletedQueue).Result;
+           return await Task.FromResult(JsonConvert.DeserializeObject<T>(UTF8Encoding.UTF8.GetString(result.Body)));
         }
-        public void GetMessageFromCreateQueue()
+        public async Task<T> GetMessageFromCreateQueueAsync<T>()
         {
-            GetMessageFromQueue<OrderCreatedEvent>(servicesModel.AzureServices.OrderCreatedQueue);
+            var result = GetMessageFromQueueAsync(servicesModel.AzureServices.OrderCreatedQueue).Result;
+            return await Task.FromResult(JsonConvert.DeserializeObject<T>(UTF8Encoding.UTF8.GetString(result.Body)));
         }
 
-     /// <summary>
-     /// Mesaj alımı ıle ılgılı ayarlamaların yapıldığı kısım
-     /// </summary>
-     /// <returns></returns>
+        public void GetStartMessageFromDeleteQueue<T>()
+        {
+            IQueueClient queueClient = new QueueClient(servicesModel.AzureServices.AzureConnectionString, servicesModel.AzureServices.OrderDeletedQueue);
+            //queueClient.RegisterMessageHandler(OnProcess<T>, ExceptionReceivedHandler);
+            queueClient.RegisterMessageHandler(OnProcess<T>, GetMessageHandlerOptions());
+
+        }
+        public void GetStartMessageFromCreateQueue<T>()
+        {
+            IQueueClient queueClient = new QueueClient(servicesModel.AzureServices.AzureConnectionString, servicesModel.AzureServices.OrderCreatedQueue);
+            //queueClient.RegisterMessageHandler(OnProcess<T>, ExceptionReceivedHandler);
+            queueClient.RegisterMessageHandler(OnProcess<T>, GetMessageHandlerOptions()); 
+
+        }
+
+ 
+
+        /// <summary>
+        /// Mesaj alımı ıle ılgılı ayarlamaların yapıldığı kısım
+        /// </summary>
+        /// <returns></returns>
         static private MessageHandlerOptions GetMessageHandlerOptions()
         {
             var messageHandlerOptions = new MessageHandlerOptions(ExceptionReceivedHandler)
             {
-                AutoComplete = false,//Mesaj alındıgında tüketildi olarak gözükmesin. üretilen mesaj 10(default rakam) denemede tüketilmez ise Dead letter kısmına atılacak.
+                AutoComplete = true,//Mesaj alındıgında tüketildi olarak gözükmesin. üretilen mesaj 10(default rakam) denemede tüketilmez ise Dead letter kısmına atılacak.
                 MaxConcurrentCalls = 1,
             };
 
@@ -135,12 +157,13 @@ namespace AzureServiceBusProject.Infrastructure.Services
        /// <param name="message">Gelen mesaj</param>
        /// <param name="cancellationToken"></param>
        /// <returns></returns>
-        private static Task OnProcess<T>(Message message, CancellationToken cancellationToken)
+        private static  Task<T> OnProcess<T>(Message message, CancellationToken cancellationToken)
         {
             var model = JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(message.Body));
-
-            return Task.CompletedTask;
+            Console.WriteLine($"Received messge: { Encoding.UTF8.GetString(message.Body)}");
+            return Task.FromResult(model);
         }
-    
+
+     
     }
 }

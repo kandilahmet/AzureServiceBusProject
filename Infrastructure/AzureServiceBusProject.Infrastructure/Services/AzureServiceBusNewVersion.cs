@@ -2,15 +2,13 @@
 using AzureServiceBusProject.Application.Interfaces;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
- 
+
 
 namespace AzureServiceBusProject.Infrastructure.Services
 {
-    public class AzureServiceBusNewVersion: IServiceBus
+    public class AzureServiceBusNewVersion : IServiceBus
     {
         private readonly ServicesModel servicesModel;
         static ServiceBusClient client;
@@ -21,79 +19,115 @@ namespace AzureServiceBusProject.Infrastructure.Services
             this.servicesModel = serviceModel;
             client = new ServiceBusClient(servicesModel.AzureServices.AzureConnectionString);
         }
-        public AzureServiceBusNewVersion()
+        ~AzureServiceBusNewVersion()
         {
-           client.DisposeAsync();
+            client.DisposeAsync();
+            processor.DisposeAsync();
         }
 
-        public async void SendMessageToCreateQueueAsync(object messageContent)
+
+        public async Task SendMessageToCreateQueueAsync(object messageContent)
         {
 
             sender = client.CreateSender(servicesModel.AzureServices.OrderCreatedQueue);
 
             using ServiceBusMessageBatch messageBatch = await sender.CreateMessageBatchAsync();
 
-            messageBatch.TryAddMessage(new ServiceBusMessage(JsonConvert.SerializeObject(messageContent)));
+            messageBatch.TryAddMessage(new ServiceBusMessage(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(messageContent))));
+
             await sender.SendMessagesAsync(messageBatch);
 
+            await sender.CloseAsync();
             await sender.DisposeAsync();
+
         }
 
-        public async void SendMessageToDeleteQueueAsync(object messageContent)
+        public async Task SendMessageToDeleteQueueAsync(object messageContent)
         {
 
             sender = client.CreateSender(servicesModel.AzureServices.OrderDeletedQueue);
 
             using ServiceBusMessageBatch messageBatch = await sender.CreateMessageBatchAsync();
 
-            messageBatch.TryAddMessage(new ServiceBusMessage(JsonConvert.SerializeObject(messageContent)));
+            messageBatch.TryAddMessage(new ServiceBusMessage(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(messageContent))));
+
             await sender.SendMessagesAsync(messageBatch);
+
 
             await sender.DisposeAsync();
         }
 
-        public async void GetMessageFromCreateQueue()
+        public async Task<T> GetMessageFromCreateQueueAsync<T>()
         {
-           
-            processor = client.CreateProcessor(servicesModel.AzureServices.OrderCreatedQueue, new ServiceBusProcessorOptions());
-            processor.ProcessMessageAsync += MessageHandler;
-            processor.ProcessErrorAsync += ErrorHandler;
-            await processor.StartProcessingAsync();
-            await processor.StopProcessingAsync();
+            ////Processor ile çalıştığımızda kullanıyoruz
+            //processor = client.CreateProcessor(servicesModel.AzureServices.OrderCreatedQueue, new ServiceBusProcessorOptions());
+            //processor.ProcessMessageAsync +=  MessageHandler<GetMessageCreatreDeleteQueueViewModel>;
+            //processor.ProcessErrorAsync += ErrorHandler;
+            //await processor.StartProcessingAsync();
+            //await processor.StopProcessingAsync();
 
-            await processor.DisposeAsync();
-           
+            //await processor.DisposeAsync();
 
+
+            ServiceBusReceiver receiver = client.CreateReceiver(servicesModel.AzureServices.OrderCreatedQueue);
+            ServiceBusReceivedMessage serviceBusReceivedMessage = await receiver.ReceiveMessageAsync();
+            await receiver.CompleteMessageAsync(serviceBusReceivedMessage);
+            await receiver.CloseAsync();
+            await receiver.DisposeAsync();
+            return await Task.FromResult<T>(JsonConvert.DeserializeObject<T>(UTF8Encoding.UTF8.GetString(serviceBusReceivedMessage.Body)));
         }
 
-        public async void GetMessageFromDeleteQueue()
+        public async Task<T> GetMessageFromDeleteQueueAsync<T>()
         {
+            ServiceBusReceiver receiver = client.CreateReceiver(servicesModel.AzureServices.OrderCreatedQueue);
+            ServiceBusReceivedMessage serviceBusReceivedMessage = await receiver.ReceiveMessageAsync();
+
+            await receiver.CompleteMessageAsync(serviceBusReceivedMessage);
+            await receiver.CloseAsync();
+            await receiver.DisposeAsync();
+            return await Task.FromResult<T>(JsonConvert.DeserializeObject<T>(UTF8Encoding.UTF8.GetString(serviceBusReceivedMessage.Body)));
+        }
+
+        public async void GetStartMessageFromDeleteQueue<T>()
+        {
+            //Processor ile çalıştığımızda kullanıyoruz
             processor = client.CreateProcessor(servicesModel.AzureServices.OrderDeletedQueue, new ServiceBusProcessorOptions());
-            processor.ProcessMessageAsync += MessageHandler;
+            processor.ProcessMessageAsync += MessageHandler<T>;
             processor.ProcessErrorAsync += ErrorHandler;
             await processor.StartProcessingAsync().ConfigureAwait(false);
 
             //await processor.StopProcessingAsync();
 
             //await processor.CloseAsync();
-            //await processor.DisposeAsync(); 
         }
 
-   
-        static Task MessageHandler(ProcessMessageEventArgs args)
+        public async void GetStartMessageFromCreateQueue<T>()
         {
-            string body = args.Message.Body.ToString();
-            Console.WriteLine($"Received: {body}");
-            
+            //Processor ile çalıştığımızda kullanıyoruz
+            processor = client.CreateProcessor(servicesModel.AzureServices.OrderCreatedQueue, new ServiceBusProcessorOptions());
+            processor.ProcessMessageAsync += MessageHandler<T>;
+            processor.ProcessErrorAsync += ErrorHandler;
+            await processor.StartProcessingAsync().ConfigureAwait(false);
+
+            //await processor.StopProcessingAsync();
+
+            //await processor.CloseAsync();
+        }
+        static Task<T> MessageHandler<T>(ProcessMessageEventArgs args)
+        { 
+            T result = JsonConvert.DeserializeObject<T>(UTF8Encoding.UTF8.GetString(args.Message.Body));
+            //  string body = args.Message.Body.ToString();
+
+            Console.WriteLine($"Received messge : {UTF8Encoding.UTF8.GetString(args.Message.Body)}"); 
+
             // complete the message. messages is deleted from the queue. 
             //await args.CompleteMessageAsync(args.Message);
-            return Task.CompletedTask;
+            return Task.FromResult<T>(result);
         }
-
         static Task ErrorHandler(ProcessErrorEventArgs args)
         {
             Console.WriteLine(args.Exception.ToString());
-         
+
             return Task.CompletedTask;
 
         }

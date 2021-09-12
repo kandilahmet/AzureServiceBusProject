@@ -6,10 +6,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using AzureServiceBusProject.Application.Events;
 using AzureServiceBusProject.Application.Interfaces;
+using AzureServiceBusProject.Application.Interfaces.Results;
+using AzureServiceBusProject.Application.Results;
 using MediatR;
 namespace AzureServiceBusProject.Application.Features.Commands.DeleteOrder
 {
-    public class DeleteOrderHandler : IRequestHandler<DeleteOrderRequest, DeleteOrderResponse>
+    public class DeleteOrderHandler : IRequestHandler<DeleteOrderRequest, IDataResult<DeleteOrderResponse>>
     {
         private readonly IServiceBus serviceBus;
 
@@ -17,24 +19,20 @@ namespace AzureServiceBusProject.Application.Features.Commands.DeleteOrder
         {
             this.serviceBus = serviceBus;
         }
-        public async Task<DeleteOrderResponse> Handle(DeleteOrderRequest request, CancellationToken cancellationToken)
+        public async Task<IDataResult<DeleteOrderResponse>> Handle(DeleteOrderRequest request, CancellationToken cancellationToken)
         {
-            var result = await Task.FromResult(new DeleteOrderResponse
+            var eventOrderDeletedModel = new OrderDeletedEvent
             {
-                Id = Guid.NewGuid()
-            }); 
-
-            var eventOrderDeletedModel =   new OrderDeletedEvent
-            {
-                CreatedDate=DateTime.UtcNow,
-                Id=result.Id
+                CreatedDate = DateTime.UtcNow,
+                Id = Guid.NewGuid(),
             };
 
-            //await this.serviceBus.CreateQueueIfNotExits("OrderDeletedQueue");
-            //await this.serviceBus.SendMessageToQueueAsync("OrderDeletedQueue", eventOrderDeletedModel);
-            this.serviceBus.SendMessageToDeleteQueueAsync(eventOrderDeletedModel);
+            await serviceBus.SendMessageToDeleteQueueAsync(eventOrderDeletedModel);
 
-            return result;
+            return new SuccessDataResult<DeleteOrderResponse>(new DeleteOrderResponse { Id = eventOrderDeletedModel.Id }, "Ürün Silme Kuyruğuna Gönderme İşlemi Başarılı !");
+
         }
+   
+    
     }
 }

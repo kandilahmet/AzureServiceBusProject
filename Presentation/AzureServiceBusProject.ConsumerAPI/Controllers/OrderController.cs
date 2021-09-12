@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AzureServiceBusProject.Application.Interfaces;
+using AzureServiceBusProject.Application.ViewModels;
 
 namespace AzureServiceBusProject.ConsumerAPI.Controllers
 {
@@ -18,17 +19,30 @@ namespace AzureServiceBusProject.ConsumerAPI.Controllers
             this.serviceBus = serviceBus;
         }
 
-        [HttpPost("GetOrderDeletedFromQueue")]
-        public  void  GetOrderDeletedFromQueue()
+        [HttpGet("GetOrderDeletedFromQueue")]
+        public GetMessageFromDeleteQueueViewModel GetOrderDeletedFromQueue()
         {
-             serviceBus.GetMessageFromDeleteQueue();
+            var result = serviceBus.GetMessageFromDeleteQueueAsync<GetMessageFromDeleteQueueViewModel>().Result;
+            return result;
         }
 
-        [HttpPost("GetOrderCreatedFromQueue")]
-        public  void GetOrderCreatedFromQueue()
+        [HttpGet("GetOrderCreatedFromQueue")]
+        public GetMessageFromCreateQueueViewModel GetOrderCreatedFromQueue()
         {
-              serviceBus.GetMessageFromCreateQueue();            
+            var result = serviceBus.GetMessageFromCreateQueueAsync<GetMessageFromCreateQueueViewModel>().Result;
+            return result;
         }
 
+        [HttpGet("GetStartMessageFromDeleteQueue")]
+        public void GetStartMessageFromDeleteQueue()
+        {
+            serviceBus.GetStartMessageFromDeleteQueue<GetMessageFromDeleteQueueViewModel>();
+            //serviceBus.GetStartMessageFromCreateQueue<GetMessageFromCreateQueueViewModel>(); 
+        }
+        [HttpGet("GetStartMessageFromCreateQueue")]
+        public void GetStartMessageFromCreateQueue()
+        {
+            serviceBus.GetStartMessageFromCreateQueue<GetMessageFromCreateQueueViewModel>();
+        }
     }
 }

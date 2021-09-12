@@ -2,6 +2,7 @@
 using AzureServiceBusProject.Application.Features.Commands.CreateOrder;
 using AzureServiceBusProject.Application.Features.Commands.DeleteOrder;
 using AzureServiceBusProject.Application.Interfaces;
+using AzureServiceBusProject.Application.Interfaces.Results;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +25,7 @@ namespace AzureServiceBusProject.API.Controllers
         }
 
         [HttpPost("CreateOrder")] 
-        public async Task<CreateOrderResponse> CreateOrder([FromBody] CreateOrderRequest createOrderRequest)
+        public async Task<IDataResult<CreateOrderResponse>> CreateOrder([FromBody] CreateOrderRequest createOrderRequest)
         {
             var response = await this.mediator.Send(createOrderRequest);
 
@@ -32,7 +33,7 @@ namespace AzureServiceBusProject.API.Controllers
         }
 
         [HttpPost("DeleteOrder")]
-        public async Task<DeleteOrderResponse> DeleteOrder([FromBody] DeleteOrderRequest deleteOrderRequeset)
+        public async Task<IDataResult<DeleteOrderResponse>> DeleteOrder([FromBody] DeleteOrderRequest deleteOrderRequeset)
         {
 
             var result = await this.mediator.Send(deleteOrderRequeset);
