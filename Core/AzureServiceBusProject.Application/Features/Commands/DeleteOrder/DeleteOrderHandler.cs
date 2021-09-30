@@ -13,9 +13,9 @@ namespace AzureServiceBusProject.Application.Features.Commands.DeleteOrder
 {
     public class DeleteOrderHandler : IRequestHandler<DeleteOrderRequest, IDataResult<DeleteOrderResponse>>
     {
-        private readonly IServiceBus serviceBus;
+        private readonly IServiceBusQueue serviceBus;
 
-        public DeleteOrderHandler(IServiceBus serviceBus)
+        public DeleteOrderHandler(IServiceBusQueue serviceBus)
         {
             this.serviceBus = serviceBus;
         }

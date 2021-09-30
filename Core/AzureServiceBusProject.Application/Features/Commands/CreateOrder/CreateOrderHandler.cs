@@ -13,9 +13,9 @@ namespace AzureServiceBusProject.Application.Features.Commands.CreateOrder
 {
     public class CreateOrderHandler:IRequestHandler<CreateOrderRequest, IDataResult<CreateOrderResponse>>
     {
-        private readonly IServiceBus serviceBus;
+        private readonly IServiceBusQueue serviceBus;
          
-        public CreateOrderHandler( IServiceBus serviceBus)
+        public CreateOrderHandler( IServiceBusQueue serviceBus)
         {
             this.serviceBus = serviceBus;
         }

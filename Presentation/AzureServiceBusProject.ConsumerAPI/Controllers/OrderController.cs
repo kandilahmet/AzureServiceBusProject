@@ -13,8 +13,8 @@ namespace AzureServiceBusProject.ConsumerAPI.Controllers
     [ApiController]
     public class OrderController : ControllerBase
     {
-        private readonly IServiceBus serviceBus;
-        public OrderController(IServiceBus serviceBus)
+        private readonly IServiceBusQueue serviceBus;
+        public OrderController(IServiceBusQueue serviceBus)
         {
             this.serviceBus = serviceBus;
         }

@@ -8,18 +8,18 @@ using System.Threading.Tasks;
 
 namespace AzureServiceBusProject.Infrastructure.Services
 {
-    public class AzureServiceBusNewVersion : IServiceBus
+    public class AzureServiceBusQueueNewVersion : IServiceBusQueue
     {
         private readonly ServicesModel servicesModel;
         static ServiceBusClient client;
         static ServiceBusSender sender;
         static ServiceBusProcessor processor;
-        public AzureServiceBusNewVersion(ServicesModel serviceModel)
+        public AzureServiceBusQueueNewVersion(ServicesModel serviceModel)
         {
             this.servicesModel = serviceModel;
             client = new ServiceBusClient(servicesModel.AzureServices.AzureConnectionString);
         }
-        ~AzureServiceBusNewVersion()
+        ~AzureServiceBusQueueNewVersion()
         {
             client.DisposeAsync();
             processor.DisposeAsync();
@@ -57,6 +57,7 @@ namespace AzureServiceBusProject.Infrastructure.Services
             await sender.DisposeAsync();
         }
 
+
         public async Task<T> GetMessageFromCreateQueueAsync<T>()
         {
             ////Processor ile çalıştığımızda kullanıyoruz
@@ -87,6 +88,7 @@ namespace AzureServiceBusProject.Infrastructure.Services
             await receiver.DisposeAsync();
             return await Task.FromResult<T>(JsonConvert.DeserializeObject<T>(UTF8Encoding.UTF8.GetString(serviceBusReceivedMessage.Body)));
         }
+
 
         public async void GetStartMessageFromDeleteQueue<T>()
         {
@@ -132,5 +134,6 @@ namespace AzureServiceBusProject.Infrastructure.Services
 
         }
 
+         
     }
 }

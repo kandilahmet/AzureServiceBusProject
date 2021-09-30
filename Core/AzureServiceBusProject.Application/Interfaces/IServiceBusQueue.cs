@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace AzureServiceBusProject.Application.Interfaces
 {
-    public interface IServiceBus
+    public interface IServiceBusQueue
     {
          
         //public Task SendMessageToQueueAsync(string queueName,object messageContent);

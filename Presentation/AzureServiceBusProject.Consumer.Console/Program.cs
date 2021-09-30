@@ -15,14 +15,14 @@ namespace AzureServiceBusProject.Consumer.Console
 
             IServiceProvider serviceProvider = services.BuildServiceProvider();
 
-            IServiceBus serviceBus = serviceProvider.GetService<IServiceBus>();
+            IServiceBusQueue serviceBus = serviceProvider.GetService<IServiceBusQueue>();
 
             serviceBus.GetStartMessageFromDeleteQueue<GetMessageFromDeleteQueueViewModel>();
 
 
             serviceBus.GetStartMessageFromCreateQueue<GetMessageFromCreateQueueViewModel>();
 
-            System.Console.ReadLine();
+            System.Console.ReadLine();//Eklemek lazım yoksa mesaj gelmeden uygulama kapanıyor
         }
     }
 }

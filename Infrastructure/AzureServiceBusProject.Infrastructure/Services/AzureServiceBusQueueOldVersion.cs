@@ -16,7 +16,7 @@ namespace AzureServiceBusProject.Infrastructure.Services
 {   /// Azure Queue/Topic kullanma(kayıt atma-kayıt okuma-dinleme) işleri ayrı bir dll(Microsoft.Azure.ServiceBus)
     /// Management işleri Bu Queue/Topic oluşturulması temizlenmesi var olup olmadığı bilgilerinin kontrol edilmesi
     /// ayr bir dll de toplanmıştır(Microsoft.Azure.Management.ServiceBus).
-    public class AzureServiceBusOldVersion :IServiceBus
+    public class AzureServiceBusQueueOldVersion :IServiceBusQueue
 
     {
         private readonly ServicesModel servicesModel;
@@ -30,7 +30,7 @@ namespace AzureServiceBusProject.Infrastructure.Services
         //}
 
         //Yöntem 2
-        public AzureServiceBusOldVersion(ServicesModel serviceModel, ManagementClient manageClient)
+        public AzureServiceBusQueueOldVersion(ServicesModel serviceModel, ManagementClient manageClient)
         {
             //IoC yapılanmasında nesne havuzundan alınan ServiceModel nesnesi
             this.servicesModel = serviceModel;
