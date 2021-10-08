@@ -17,7 +17,7 @@ namespace AzureServiceBusProject.Infrastructure
         {
             //services.AddSingleton<IServiceBus, AzureServiceBusOldVersion>();//Eski versiyon mesaj gönderim yapısı
             services.AddSingleton<IServiceBusQueue, AzureServiceBusQueueNewVersion>();//Yeni versiyon mesaj gönderim yapısı
-
+            services.AddSingleton<IServiceBusTopic, AzureServiceBusTopicNewVersion>();
             //Farklı bir Proje/Class Library den appsettings.json dosyasındaki verileri okuma eylemi
 
             // .json(farklı uzanltılı .xml dosyada olabilir) dosyasını ele alması için bir ConfigurationBuilder örneği oluşturuyoruz. 

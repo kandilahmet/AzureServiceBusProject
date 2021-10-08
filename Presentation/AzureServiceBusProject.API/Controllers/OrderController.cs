@@ -1,7 +1,8 @@
 ﻿using AzureServiceBusProject.Application.Events;
 using AzureServiceBusProject.Application.Features.Commands.CreateOrder;
+using AzureServiceBusProject.Application.Features.Commands.CreateOrderForTopic;
 using AzureServiceBusProject.Application.Features.Commands.DeleteOrder;
-using AzureServiceBusProject.Application.Interfaces;
+using AzureServiceBusProject.Application.Features.Commands.DeleteOrderForTopic;
 using AzureServiceBusProject.Application.Interfaces.Results;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -24,7 +25,7 @@ namespace AzureServiceBusProject.API.Controllers
             this.mediator = mediator;
         }
 
-        [HttpPost("CreateOrder")] 
+        [HttpPost("CreateOrder")]
         public async Task<IDataResult<CreateOrderResponse>> CreateOrder([FromBody] CreateOrderRequest createOrderRequest)
         {
             var response = await this.mediator.Send(createOrderRequest);
@@ -33,11 +34,25 @@ namespace AzureServiceBusProject.API.Controllers
         }
 
         [HttpPost("DeleteOrder")]
-        public async Task<IDataResult<DeleteOrderResponse>> DeleteOrder([FromBody] DeleteOrderRequest deleteOrderRequeset)
+        public async Task<IDataResult<DeleteOrderResponse>> DeleteOrder()
         {
 
-            var result = await this.mediator.Send(deleteOrderRequeset);
+            var result = await this.mediator.Send(new DeleteOrderRequest());
             return result;
         }
+
+        [HttpPost("DeleteOrderForTopic")]
+        public async Task<IDataResult<DeleteOrderForTopicResponse>> DeleteOrderForTopic()
+        {
+            var result = await this.mediator.Send(new DeleteOrderForTopicRequest());
+            return result;
+        }
+        [HttpPost("CreateOrderForTopic")]
+        public async Task<IDataResult<CreateOrderForTopicResponse>> CreateOrderForTopic([FromBody] CreateOrderForTopicRequest createOrderForTopicRequest)
+        {
+            var result = await this.mediator.Send(createOrderForTopicRequest);
+            return result;
+        }
+
     }
 }

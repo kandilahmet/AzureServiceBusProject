@@ -13,36 +13,51 @@ namespace AzureServiceBusProject.ConsumerAPI.Controllers
     [ApiController]
     public class OrderController : ControllerBase
     {
-        private readonly IServiceBusQueue serviceBus;
-        public OrderController(IServiceBusQueue serviceBus)
+        private readonly IServiceBusQueue serviceBusQueue;
+        private readonly IServiceBusTopic  serviceBusTopic;
+        public OrderController(IServiceBusQueue serviceBus, IServiceBusTopic serviceBusTopic)
         {
-            this.serviceBus = serviceBus;
+            this.serviceBusQueue = serviceBus;
+            this.serviceBusTopic = serviceBusTopic;
         }
 
         [HttpGet("GetOrderDeletedFromQueue")]
         public GetMessageFromDeleteQueueViewModel GetOrderDeletedFromQueue()
         {
-            var result = serviceBus.GetMessageFromDeleteQueueAsync<GetMessageFromDeleteQueueViewModel>().Result;
+            var result = serviceBusQueue.GetMessageFromDeleteQueueAsync<GetMessageFromDeleteQueueViewModel>().Result;
             return result;
         }
 
         [HttpGet("GetOrderCreatedFromQueue")]
         public GetMessageFromCreateQueueViewModel GetOrderCreatedFromQueue()
         {
-            var result = serviceBus.GetMessageFromCreateQueueAsync<GetMessageFromCreateQueueViewModel>().Result;
+            var result = serviceBusQueue.GetMessageFromCreateQueueAsync<GetMessageFromCreateQueueViewModel>().Result;
             return result;
         }
 
         [HttpGet("GetStartMessageFromDeleteQueue")]
         public void GetStartMessageFromDeleteQueue()
         {
-            serviceBus.GetStartMessageFromDeleteQueue<GetMessageFromDeleteQueueViewModel>();
+            serviceBusQueue.GetStartMessageFromDeleteQueue<GetMessageFromDeleteQueueViewModel>();
             //serviceBus.GetStartMessageFromCreateQueue<GetMessageFromCreateQueueViewModel>(); 
         }
         [HttpGet("GetStartMessageFromCreateQueue")]
         public void GetStartMessageFromCreateQueue()
         {
-            serviceBus.GetStartMessageFromCreateQueue<GetMessageFromCreateQueueViewModel>();
+            serviceBusQueue.GetStartMessageFromCreateQueue<GetMessageFromCreateQueueViewModel>();
         }
+
+        [HttpGet("GetMessageFromOrderTopicCreatedSubscriptionAsync")]
+        public async Task<GetMessageFromOrderTopicCreatedSubscriptionViewModel>  GetMessageFromOrderTopicCreatedSubscriptionAsync()
+        {
+           return await serviceBusTopic.GetMessageFromOrderTopicCreatedSubscriptionAsync<GetMessageFromOrderTopicCreatedSubscriptionViewModel>();
+        }
+
+        [HttpGet("GetMessageFromOrderTopicDeletedSubscriptionAsync")]
+        public async Task<GetMessageFromOrderTopicDeletedSubscriptionViewModel> GetMessageFromOrderTopicDeletedSubscriptionAsync()
+        {
+            return await serviceBusTopic.GetMessageFromOrderTopicDeletedSubscriptionAsync<GetMessageFromOrderTopicDeletedSubscriptionViewModel>();
+        }
+
     }
 }

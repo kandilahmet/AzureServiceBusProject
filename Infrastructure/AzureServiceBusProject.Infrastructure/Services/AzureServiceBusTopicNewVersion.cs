@@ -16,17 +16,14 @@ namespace AzureServiceBusProject.Infrastructure.Services
         private static ServiceBusClient client;
         private static ServiceBusAdministrationClient adminClient;
         private static ServiceBusSender sender;
-        public AzureServiceBusTopicNewVersion()
-        {
-
-        }
         public AzureServiceBusTopicNewVersion(ServicesModel servicesModel)
         {
             this.servicesModel = servicesModel;
             adminClient = new ServiceBusAdministrationClient(connectionString: servicesModel.AzureServices.AzureConnectionString);
+            client = new ServiceBusClient(servicesModel.AzureServices.AzureConnectionString);
         }
 
-        public async Task SendMessageToTopicAsync(string topicName,string subscription,string filter ,object messageContent)
+        public async Task SendMessageToTopicAsync(string topicName,string filter ,object messageContent)
         {
             sender = client.CreateSender(topicName);
 
@@ -39,14 +36,14 @@ namespace AzureServiceBusProject.Infrastructure.Services
                 
             }
             message.Body = BinaryData.FromBytes(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(messageContent)));
-           
+
             messageBatch.TryAddMessage(message); 
 
             await sender.SendMessagesAsync(messageBatch);
             await sender.CloseAsync();
             await sender.DisposeAsync();
         }
-        public async Task SendMessageToOrderTopicCreatedSubscription(object messageContent)
+        public async Task SendMessageToOrderTopicCreatedSubscriptionAsync(object messageContent)
         {
             await this.CreateTopicIfNotExistsAsync(servicesModel.AzureServices.OrderTopic);
 
@@ -58,12 +55,12 @@ namespace AzureServiceBusProject.Infrastructure.Services
                 , servicesModel.AzureServices.OrderCreatedFilter);
 
             await SendMessageToTopicAsync(servicesModel.AzureServices.OrderTopic
-                , servicesModel.AzureServices.OrderCreatedSubscription
+               // , servicesModel.AzureServices.OrderCreatedSubscription
                 , servicesModel.AzureServices.OrderCreatedFilter
                 , messageContent
                 );
         }
-        public async Task SendMessageToOrderTopicDeletedSubscription(object messageContent)
+        public async Task SendMessageToOrderTopicDeletedSubscriptionAsync(object messageContent)
         {
             await this.CreateTopicIfNotExistsAsync(servicesModel.AzureServices.OrderTopic);
 
@@ -75,7 +72,7 @@ namespace AzureServiceBusProject.Infrastructure.Services
                 , servicesModel.AzureServices.OrderDeletedFilter);
 
             await SendMessageToTopicAsync(servicesModel.AzureServices.OrderTopic
-                , servicesModel.AzureServices.OrderDeletedSubscription
+               // , servicesModel.AzureServices.OrderDeletedSubscription
                 , servicesModel.AzureServices.OrderDeletedFilter
                 , messageContent
                 );
@@ -126,6 +123,10 @@ namespace AzureServiceBusProject.Infrastructure.Services
             return await GetMessageFromTopicAsync<T>(servicesModel.AzureServices.OrderTopic
                   , servicesModel.AzureServices.OrderCreatedSubscription);
         }
-       
+        public async Task<T> GetMessageFromOrderTopicDeletedSubscriptionAsync<T>()
+        {
+            return await GetMessageFromTopicAsync<T>(servicesModel.AzureServices.OrderTopic
+                  , servicesModel.AzureServices.OrderDeletedSubscription);
+        }
     }
 }

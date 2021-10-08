@@ -8,7 +8,9 @@ namespace AzureServiceBusProject.Application.Interfaces
 {
     public interface IServiceBusTopic
     {
-        public Task SendMessageToOrderTopicCreatedSubscription(object messageContent);
-        public Task SendMessageToOrderTopicDeletedSubscription(object messageContent);
+        public Task SendMessageToOrderTopicCreatedSubscriptionAsync(object messageContent);
+        public Task SendMessageToOrderTopicDeletedSubscriptionAsync(object messageContent);
+        public Task<GetMessageFromCreatedSubscriptionViewModel> GetMessageFromOrderTopicCreatedSubscriptionAsync<GetMessageFromCreatedSubscriptionViewModel>();
+        public Task<GetMessageFromDeleteSubscriptionViewModel> GetMessageFromOrderTopicDeletedSubscriptionAsync<GetMessageFromDeleteSubscriptionViewModel>();
     }
 }
